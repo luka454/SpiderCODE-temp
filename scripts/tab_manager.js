@@ -9,7 +9,7 @@ function TabManager(ace_manager){
  
 TabManager.prototype.addTab = function(file){
 	for(var i = 0; i < this.tabs.length; i++){
-		if(this.tabs[i] && this.tabs[i].getPath() === file.path)
+		if(this.tabs[i] && this.tabs[i].getPath() === file.getPath())
 			return this.tabs[i].id;
 	}
 
@@ -50,6 +50,8 @@ TabManager.prototype.closeTab = function closeTab(tab_id){
 	this.ace_manager.getVirtualRenderer().removeTab(tab_id);
 	this.ace_manager.getSessionManager().deleteSession(tab.session_id);
 }
+
+
  
 TabManager.prototype.getModeFromName = function getModeFromName(name){
 	var ext = name.substr(Math.max(0, name.lastIndexOf(".")) || Infinity);
@@ -68,6 +70,14 @@ TabManager.prototype.$getTabById = function(tab_id){
 	}
 
 	throw "tab_id is wrong";
+}
+
+TabManager.prototype.saveTab = function saveTab(tab_id){
+	var tab = this.$getTabById(tab_id);
+
+	//alert("tab");
+	var newContent = this.ace_manager.getSessionManager().getContent(tab.getSessionId());
+	this.ace_manager.getFileManager().updateFile(tab.getPath(), newContent);
 }
 
 
@@ -110,11 +120,11 @@ function Tab(file, id, session_id){
 }
 
 Tab.prototype.getName = function getName(){
-	return this.file.name;
+	return this.file.getName();
 }
 
 Tab.prototype.getPath = function getPath(){
-	return this.file.path;
+	return this.file.getPath();
 }
 
 Tab.prototype.setFile = function setFile(file){
@@ -122,16 +132,10 @@ Tab.prototype.setFile = function setFile(file){
 }
 
 Tab.prototype.getContent = function getContent(){
-	return this.file.content;
+	return this.file.getContent();
 }
 
-
-function File(name, path, content, sha){
-	this.name = name;
-	this.path = path;
-	this.loaded = !content ? false : true;
-	this.content = content;
-	this.sha = sha;
+Tab.prototype.getSessionId = function getSessionId(){
+	return this.session_id;
 }
-
 //END - Tab

@@ -7,7 +7,17 @@ function VirtualRenderer(ace_manager, DOMElement, theme){
 
 	this.render();	
 
+	this.context_menu = this.makeContextMenu();
+
+	this.dom_element.appendChild(this.context_menu);
+
 }
+
+VirtualRenderer.prototype.getContextMenu = function(){
+	return this.context_menu;
+}
+
+
 
 VirtualRenderer.prototype.render = function(){
 	var el = this.dom_element;
@@ -45,6 +55,7 @@ VirtualRenderer.prototype.render = function(){
 VirtualRenderer.prototype.addTab = function addTab(DOMElement){
 	this.tabs.appendChild(DOMElement);
 }
+
  
 VirtualRenderer.prototype.removeTab = function removeTab(tab_id){
 	var tab = this.$getTabById(tab_id);
@@ -60,7 +71,6 @@ VirtualRenderer.prototype.showTab = function showTab(tab_id){
 
 	var tab = this.$getTabById(tab_id);
 	tab.classList.add("acem-tab-active");
-
 }
 
 VirtualRenderer.prototype.$getTabById = function(tab_id){
@@ -89,23 +99,30 @@ VirtualRenderer.prototype.makeTab = function(name, tab_id){
 
 	el.appendChild(title);
 
+	var carret = document.createElement("div");
+	carret.innerHTML ="&#9660;";
+	carret.classList.add("acem-tab-x");
+	el.appendChild(carret);
+
 	var x = document.createElement("div");
-	x.innerHTML = "x";
+	x.innerHTML = "&#10006;";
 	x.classList.add("acem-tab-x");
 
 	el.appendChild(x);
 
 	el.tab_id = tab_id;
 	
-	var t = this;
+	var t = this; 
 
 	el.addEventListener('mouseover',function(event){
 		x.style.visibility = 'visible';
+		carret.style.visibility = 'visible';
 	}, false);
 
 
 	el.addEventListener('mouseout',function(event){ 
 		x.style.visibility = 'hidden';
+		carret.style.visibility = 'hidden';
 	}, false);
 
 	el.addEventListener('click', function(event){
@@ -117,6 +134,14 @@ VirtualRenderer.prototype.makeTab = function(name, tab_id){
 		event.stopPropagation();
 	}, false);
 
+	carret.addEventListener('click', function(event){
+		var le = document.getElementById("menu-left");
+
+		var w = parseInt(le.style.width);
+		t.showContextMenu(event.clientX - w, event.clientY - 60, el.tab_id);
+
+		event.stopPropagation();
+	}, false);
 	return el;
 }
 
@@ -124,7 +149,61 @@ VirtualRenderer.prototype.getEditorRenderer = function(){
 	return this.editor_renderer;
 }
 
+VirtualRenderer.prototype.makeContextMenu = function(){
+	var el = document.createElement("div");
+	el.classList.add("context-menu");
+	el.setAttribute("tabstop", 4);
 
+	var list = document.createElement("ul");
+	list.classList.add("context-menu-list");
+	el.appendChild(list);
+
+	var save = document.createElement("li");
+	save.classList.add("context-menu-item");
+	save.innerHTML="Save";
+	list.appendChild(save);
+
+	var saveAs = document.createElement("li");
+	saveAs.classList.add("context-menu-item");
+	saveAs.innerHTML = "SaveAs...";
+	list.appendChild(saveAs);
+
+	var discardChanges = document.createElement("li");
+	discardChanges.classList.add("context-menu-item");
+	discardChanges.innerHTML = "Discard Changes";
+	list.appendChild(discardChanges);
+
+	var t = this;
+	window.addEventListener('click',function(event){el.style.visibility = 'hidden';	}, false);
+
+	save.addEventListener('click', function(event){
+		var tb= t.ace_manager.getTabManager();
+		//el.tab_id je postavljen pri showContextMenu
+		tb.saveTab(el.tab_id);
+	}, false);
+
+	saveAs.addEventListener('click', function(event){
+		alert('Nije jos implementirano');
+	}, false);
+
+	discardChanges.addEventListener('click', function(event){
+		alert('Nije jos implementirano');
+	}, false);
+
+	return el;
+}
+
+
+VirtualRenderer.prototype.showContextMenu = function(x, y, tab_id){
+	var con = this.getContextMenu();
+	//alert("X:"+x + ", Y:" + y );
+	con.style.visibility = "visible";
+	con.style.left = x + "px";
+	con.style.top = y + "px";
+	con.style.position = "absolute";
+
+	con.tab_id = tab_id;
+}
 VirtualRenderer.prototype.resize = function(width, height, left, top){
 	this.dom_element.style.width = width + "px";
 	this.dom_element.style.height = height + "px";

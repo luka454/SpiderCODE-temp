@@ -2,10 +2,14 @@
 
 	angular.module('app').factory('DataMapper', ['ServiceProvider', function(service){
 
-		var Project = service.getService('Folder', undefined);
+
+
 		return{
 			FetchFolderContent: function(data){
-				return data; //TO DO: this
+				return data;
+			},
+			FetchTree:  function(data){
+				return data;
 			},
 			FetchFileContent: function(data){
 				return data;

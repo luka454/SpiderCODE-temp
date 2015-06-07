@@ -4,7 +4,7 @@
     var HomeCtrl = function($scope, service) {
     //services - begin
         var ProjectFactory = service.getService('ProjectFactory', undefined);
-        var Folder = service.getService('Folder', undefined);
+//        var Folder = service.getService('Folder', undefined);
     //services - end
  
     //menu on the right - begin
@@ -16,34 +16,13 @@
             throw "DOM with id=editor is missing.";
  
         $scope.manager = new AceManager(eDom);
- 
-        /*(function(){
- 
- 
-           
-            var file = new File("t10 Z1-a.cpp", "/var/tp/t10 z1-a.cpp", code1, "ad212edasddd23d3")
- 
-            var file2 = new File("t10 Z1-b.cpp", "/var/tp/t10 z1-b.cpp", code2, "ad2sasa12edasddd23d3")
- 
-            var file3 = new File("t10 Z1-b.js", "/var/tp/t10 z1-b.js", codejs3, "ad2sasa12edasddd23d3")
-            var tm = $scope.manager.getTabManager();     
- 
-            tm.addTab(file);     
-            tm.addTab(file2);
-            tm.addTab(file3);     
-        }())*/
-         
-    //$scope.editor = ace.edit("editor");
-    //$scope.editor.setTheme("ace/theme/tomorrow_night");
-    //$scope.editor.getSession().setMode("ace/mode/javascript");
-     
-    //menu on the right - end
- 
-    //menu on the left - begin
- 
-        //dummmy dataa - ovo je glupo uradjeno, ali je samo privremeno, dok ne napravimo http gettere
- 
-        //var code = "function foo(items) { var x = 5;  return x;  }";
+        $scope.fileManager = new FileManager("#projectTree");
+
+        //Povezivanje jednog s drugim, jer ako bi ubacivali u kontroler od jednog onda bi se postavljalo pitanje koka ili jaje
+        $scope.manager.setFileManager($scope.fileManager);
+        $scope.fileManager.setAceManager($scope.manager);
+        // dummy DATA - BEGIN
+
         var code111 = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 <HEAD>
@@ -70,68 +49,31 @@
  
                 'p a:hover{\ntext-decoration:underline;\n}';
  
-        var file111 = new File('Zadatak 1.html', '/Web tehnologije/Tutorijal 1/Zadatak 1.html', code111, '???');
-        var file112 = new File('Zadatak 2.js', '/Web tehnologije/Tutorijal 1/Zadatak 1.js', code112, '???');
+        var file111 = new File('Zadatak 1.html', '/Web tehnologije/Tutorijal 1/Zadatak 1.html', code111, '/Web tehnologije/Tutorijal 1/Zadatak 1.html');
+        var file112 = new File('Zadatak 2.js', '/Web tehnologije/Tutorijal 1/Zadatak 1.js', code112, '/Web tehnologije/Tutorijal 1/Zadatak 2.js');
  
-        var file121 = new File('Zadatak 1.css',"/Web tehnologije/Tutorijal 2/Zadatak 1.css",code121, '???');
+        var file121 = new File('Zadatak 1.css',"/Web tehnologije/Tutorijal 2/Zadatak 1.css",code121, '/Web tehnologije/Tutorijal 2/Zadatak 1.css');
  
-        var f11 = {
-            Name: 'Tutorijal 1',
-            Path: '/Web tehnologije/Tutorijal 1',
-            Folders: [],
-            Files: [file111, file112]
-        };
+        var f11 = new Folder('Tutorijal 1','/Web tehnologije/Tutorijal 1', [file111, file112], '/Web tehnologije/Tutorijal 1');
  
-        var f12 = {
-            Name: 'Tutorijal 2',
-            Path: '/Web tehnologije/Tutorijal 2',
-            Folders: [],
-            Files: [file121]
-        };
+        var f12 = new Folder('Tutorijal 2', '/Web tehnologije/Tutorijal 2', [file121], '/Web tehnologije/Tutorijal 2');
  
-        var f1 = {
-            Name: 'Web tehnologije',
-            Path: '/Web tehnologije',
-            Folders: [f11, f12],
-            Files: []
-        };
+        var f1 = new Folder('Web tehnologije', '/Web tehnologije', [f11, f12], '/Web tehnologije');
  
         var code211 = '//THIS is ineditor example\nfunction Tab(file, id, session_id){\n    this.file = file;\n    this.id = id;\n    this.session_id;\n}\n\n' +
              
-                'Tab.prototype.getName = function getName(){\n    return this.file.name;\n}\n';
+                'Tab.prototype.getName = function getName(){\n    return this.file.Name;\n}\n';
          
-        var file211 = new File('index.html','/Moji projekti/Spidercode/index.html', code211, '???');
+        var file211 = new File('index.html','/Moji projekti/Spidercode/index.html', code211, '/Moji projekti/Spidercode/index.html');
  
-        var f21 = {
-            Name: 'Spidercode',
-            Path: '/Moji projekti/Spidercode',
-            Folders: [],
-            Files: [file211]
-        };
+        var f21 = new Folder('Spidercode', '/Moji projekti/Spidercode', [file211], '/Moji projekti/Spidercode');
  
-        var f2 = {
-            Name: 'Moji projekti',
-            Path: '/Moji projekti',
-            Folders: [f21],
-            Files: []
-        };
+        var f2 = new Folder('Moji projekti', '/Moji projekti', [f21], '/Moji projekti');
  
         var Projects = [f1, f2];
   
-        /*
-        for(var i = 0; i < 5; i++)
-        {
-            var f121 = {Name: 'Folder1.2.1', Files:[], Folders:[]};
-            var f12 = {Name: 'Folder1.2', Files:[], Folders:[f121]};
-            var f11 = {Name: 'Folder1.1', Files:[], Folders:[]};
-            var f1 =  {Name: 'Folder1', Files: [{Name : 'file1', Value:code},{Name: 'file2', Value:code}], Folders: [f11,f12] };
-            var f2 =  {Name: 'Folder2', Files: [{Name:'file1', Value:code},{Name:'file2', Value:code}],Folders:[]};
-            var f3 = {Name: 'Folder3', Files: [{Name:'file1', Value:code},{Name:'file2', Value:code}],Folders:[]};
  
-            Projects[i] = { Folders: [f1, f2, f3], 
-            Files: [{Name:'file1', Value:code},{Name:'file2', Value:code}, {Name:'file3', Value:code},{Name:'file4', Value:code}], Name: 'Project'+i, Path: 'Project'+i};
-        }*/
- 
+ // DUMMY DATA END 
         $scope.openInEditor = function(file)
         {
             //file.type = "javascript";
@@ -140,6 +82,24 @@
  
             $scope.openedFile = file; //ovo openedFile ce poslije  biti atribut od span-a od taba 
         }
+
+         var getTree = function(){
+            return ProjectFactory.getTree(); //ovo treba bit u mngr
+        }
+
+        var getFolderContents = function(path){
+            return ProjectFactory.getFolderContents({path: path}); //ovo treba bit u mngr
+        }
+
+        var getFile = function(path){
+            return ProjectFactory.getFile({path: path}); //ovo treba bit u mngr
+        }
+
+        var updateFile = function(path, content){
+            return ProjectFactory.updateFile({path: path, content: content}); //ovo treba bit u mngr
+        }
+        
+        $scope.fileManager.updateFile = updateFile; 
  
         // ovo je onclick funkcija za sve elemente klase folder, liste koja se moze prosiriti
         //refElement nam je HTML objekat koji predstavlja prosirivu listu koja moze biti prosirena ili ne 
@@ -152,9 +112,11 @@
                 var className = refElement.className.replace( /(?:^|\s)unexpanded(?!\S)/ , ' expanded' ); //zelimo da zamijenimo unexpanded sa expanded, jer smo kliknuli, ali ne zelimo izbrisati ostale klase
                 refElement.setAttribute("class", className);  
  
-                if(refFolder.Folders === [] && refFolder.Files === [])
+                if(!refFolder.getIsLoad())
                 {
                     //HTTP GET folderov content(samo imena fileova) na osnovu path-a + appear(refElement, refFolder)
+                    refFolder.SetContent = getFolderContents(refFolder.getPath());
+
                 }
                 else
                 {
@@ -180,18 +142,19 @@
         };
  
         //napravi clanove liste u refElementu - prikazi sadrzaj refFolder-a, na osnovu dobavljenih podataka
-        var  appear = function(refElement, refFolder)
+        var appear = function(refElement, refFolder)
         {
             var lista = document.createElement("ul"); //lista koju ce u sebi sadrzavati refElement - to je njegov content
-            for(var i = 0; i < refFolder.Folders.length; i++) //za svaki folder koji sadrzi u sebi pravimo li element koji je tipa prosirive liste
+            var folders = refFolder.getFolders();
+            for(var i = 0; i < folders.length; i++) //za svaki folder koji sadrzi u sebi pravimo li element koji je tipa prosirive liste
                                                               //ovi folderi ce biti lazy-loadani - odnosno dobavit ce se samo njihova imena i po potrebi pathovi
             {
                 var node = document.createElement("LI");
-                node.setAttribute("class", "folder unexpanded");  
+                node.setAttribute("class", "folder not-selectable unexpanded");  
  
                 var c = document.createElement("span");
                 c.setAttribute("class", "icon");
-                c.folder = refFolder.Folders[i];
+                c.folder = folders[i];
                 c.addEventListener( "click", function() {
                 return $scope.list(this.parentNode, this.folder);
                 }, false);
@@ -199,10 +162,10 @@
  
                 var s = document.createElement("span");
                 s.setAttribute("class", "link");
-                s.innerHTML = refFolder.Folders[i].Name;
+                s.innerHTML = folders[i].getName();
  
                 // dodajemo js objekat na html objekat, kako bi znali na koji folder se referencira
-                s.folder = refFolder.Folders[i];
+                s.folder = folders[i];
  
                 //dodajemo eventListener za dblclick funkciju za unutarnje foldere - jer su i oni tipa prosirive liste
                 s.addEventListener( "dblclick", function() {
@@ -213,13 +176,15 @@
                 node.appendChild(s);
                 lista.appendChild(node);//na novonapravljenu listu kacimo njenu "djecu"
             }
-            for(var j = 0; j < refFolder.Files.length; j++) //radimo isto za unutarnje fileove, kao za foldere, samo sto oni nisu tipa prosirive liste
+
+            var files = refFolder.getFiles();
+            for(var i = 0; i < files.length; i++) //radimo isto za unutarnje fileove, kao za foldere, samo sto oni nisu tipa prosirive liste
             {
                 var node = document.createElement("LI");
                 var s = document.createElement("span");
                 s.setAttribute("class", "link");
-                s.innerHTML = refFolder.Files[j].name;
-                s.file = refFolder.Files[j];
+                s.innerHTML = files[i].getName();
+                s.file = files[i];
                  
                 s.addEventListener( "dblclick", function() { //ovdje ce biti neka funkcija koja editoru daje file za ocitavanje
                     return $scope.openInEditor(this.file);
@@ -245,7 +210,8 @@
                 }
             refElement.querySelector("ul").style.display = "none";
         }
- 
+
+       
         $scope.onloadfunc = function()
         {
          
@@ -254,11 +220,12 @@
             if(elements.length != 0)
             {
                 var list = elements[0];
-                if(Projects.length != 0)
+                if(Projects.length === 0)
+                    Projects = getTree();
                 for(var i = 0; i < Projects.length; i++) // prikazi dobavljene projekte za user-a kao prosirive liste
                 {
                         var node = document.createElement("LI");
-                        node.setAttribute("class", "folder unexpanded");
+                        node.setAttribute("class", "folder not-selectable unexpanded");
  
                         var c = document.createElement("span");
                         c.setAttribute("class", "icon");
@@ -270,7 +237,7 @@
  
                         var s = document.createElement("span");
                         s.setAttribute("class", "link");
-                        s.innerHTML = Projects[i].Name;
+                        s.innerHTML = Projects[i].getName();
                         s.folder = Projects[i];
                         s.addEventListener( "dblclick", function() {
                         return $scope.list(this.parentNode, this.folder);
@@ -287,6 +254,8 @@
         var file_manager_resizer = {
             resize : function(width, height, left, top){
                 this.dom_element = document.getElementById("menu-left");
+                if(!this.dom_element)
+                    return;
                 this.dom_element.style.width = width + "px";
                 this.dom_element.style.height = height + "px";
                 this.dom_element.style.left = left + "px";
