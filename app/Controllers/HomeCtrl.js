@@ -1,77 +1,164 @@
 (function(){
     
  
-    var HomeCtrl = function($scope, service) {
+   var HomeCtrl = function($scope, fileManager, $http) {
     //services - begin
-        var ProjectFactory = service.getService('ProjectFactory', undefined);
-//        var Folder = service.getService('Folder', undefined);
-    //services - end
- 
-    //menu on the right - begin
- 
-        //editor
+        $scope.ProjectFactory = fileManager.getProjectFactory();
+
+       // alert(typeof(JSZip)); 
+        //alert(JSZip);
         var eDom = document.getElementById("editor");
  
         if(!eDom)
             throw "DOM with id=editor is missing.";
+
+        fileManager.setVirtualRenderer(eDom);
+
+        $scope.fileVirtualRenderer = fileManager.getVirtualRenderer();
+ 
  
         $scope.manager = new AceManager(eDom);
-        $scope.fileManager = new FileManager("#projectTree");
+//Povezivanje jednog s drugim, jer ako bi ubacivali u kontroler od jednog onda bi se postavljalo pitanje koka ili jaje
+        $scope.manager.setFileManager(fileManager);
+        fileManager.setAceManager($scope.manager);
 
-        //Povezivanje jednog s drugim, jer ako bi ubacivali u kontroler od jednog onda bi se postavljalo pitanje koka ili jaje
-        $scope.manager.setFileManager($scope.fileManager);
-        $scope.fileManager.setAceManager($scope.manager);
+         //services - end
+
+        var testBtn = document.createElement("li");
+        testBtn.classList.add("acem-tab");
+        testBtn.classList.add("not-selectable");
+        
+        var title = document.createElement("div");
+        title.classList.add("acem-tab-title");
+        //title.classList.add("not-selectable");
+        var t_text = document.createTextNode("Tests");
+        title.appendChild(t_text);
+
+        testBtn.appendChild(title);
+
+        testBtn.style.backgroundColor = "rgb(136, 21, 136)";
+        testBtn.style.color = "white";
+        testBtn.style.float = "right"; 
+
+        testBtn.addEventListener('click', function(e){
+            var panel = document.getElementById("test-panel");
+            panel.style.left = "30%";
+
+        }, false);
+        $scope.manager.getVirtualRenderer().addTab(testBtn);
+        document.getElementById("test-x-btn").addEventListener('click', function(e){
+            var panel = document.getElementById("test-panel");
+            panel.style.left = "100%";
+
+        }, false);
+        $scope.task = new Task();
+        $scope.task.addTest(new Test());
+        $scope.task.addTest(new Test());
+        $scope.taskTab = 1;
+        var codeEditor = ace.edit("codeEditor");
+        codeEditor.setTheme("ace/theme/tomorrow_night");
+        codeEditor.getSession().setMode("ace/mode/c_cpp");
+        codeEditor.resize(true);
+
+        var gamEditor = ace.edit("gamEditor");
+        gamEditor.setTheme("ace/theme/tomorrow_night");
+        gamEditor.getSession().setMode("ace/mode/c_cpp");
+        gamEditor.resize(true);
+
+        var gtEditor = ace.edit("gtEditor");
+        gtEditor.setTheme("ace/theme/tomorrow_night");
+        gtEditor.getSession().setMode("ace/mode/c_cpp");
+        gtEditor.resize(true)
+
+        var curTest = null;
+        var refreshTestList = function(){
+            var list = document.getElementById("tests-list-list");
+            list.innerHTML ="";
+            var tests = $scope.task.getTests();
+            for(var i = 0; i < tests.length; i++){
+                if(tests[i]){
+                    var el =document.createElement("li");
+                    el.id = tests[i].id;
+                    el.innerHTML = "Test " + el.id;
+                    list.appendChild(el);
+
+                    el.addEventListener('click', function(e){
+                        $scope.task.showTest(e.target.id, "test-id", "req-sim", "exp-sim", "codeEditor", "gamEditor", "gtEditor", 
+                            "excCB", "iwsCB", "regCB", "subCB");
+                        curTest = e.target.id;
+                    }, false);
+                }       
+            }
+        } 
+
+        refreshTestList();
+
+        var startTestBtn = document.getElementById("tests-start");
+        startTestBtn.addEventListener('click', function(){
+            var json = JSON.stringify($scope.task);
+            //alert(json);
+
+            var zip = new JSZip();
+            
+            //alert($scope.manager.getEditor().getSession().getValue());
+
+            zip.file("zad.cpp",$scope.manager.getEditor().getSession().getValue());
+            var a = zip.generate({type:"blob"}); 
+
+            var fd = new FormData();
+            fd.append('program_data', a);
+            //var taskData = task.file("task.json").asUint8Array();
+
+            var f = new File(json, "task.json", {type: "text/plain"});
+            fd.append('task_data', f);
+            $http({
+                url: "http://php-vljubovic.rhcloud.com/bs/submit.php",
+                method: "POST",
+                data: fd, 
+                transformRequest: angular.identity,
+                headers: {'Content-Type': undefined},
+                withCredentials : false
+            }).
+            success(function(data, status, headers, config) {
+                alert("Uspjelo!!!: "+ data);
+                alert(data);
+            }).
+            error(function(data, status, headers, config) {
+                alert("Error se desio: " +  status);
+                alert(status);
+            });
+        },false);
+        document.getElementById('tests-rm').addEventListener('click', function(){
+            if(!curTest){
+                alert("Please select test first");
+            } else {
+                $scope.task.removeTest(curTest);
+                refreshTestList();
+                $scope.task.resetFields("test-id", "req-sim", "exp-sim", "codeEditor", "gamEditor", "gtEditor", 
+                            "excCB", "iwsCB", "regCB", "subCB");
+                curTest=null;
+            }
+        },false);
+
+        document.getElementById('tests-save').addEventListener('click', function(){
+            if(!curTest){
+                alert("Please select test first");
+            } else {
+                $scope.task.saveTest(curTest, "test-id", "req-sim", "exp-sim", "codeEditor", "gamEditor", "gtEditor", 
+                            "excCB", "iwsCB", "regCB", "subCB");
+            }
+        },false);
+
+        document.getElementById('tests-add').addEventListener('click',function(){
+            var id = $scope.task.addTest(new Test());
+            $scope.task.showTest(id,"test-id", "req-sim", "exp-sim", "codeEditor", "gamEditor", "gtEditor", 
+                            "excCB", "iwsCB", "regCB", "subCB");
+            curTest = id;
+            refreshTestList();
+        }, false)
         // dummy DATA - BEGIN
 
-        var code111 = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<HEAD>
-<TITLE>Dokument s zaglavljima</TITLE>
-</HEAD>
-<BODY> Svi elementi dokumenta
-<H1> Glavno poglavlje </H1>
-<H6> Sporedno poglavlje </H6>
-<P> Izmedu ovih tagova ide pasus teksta </P>
-</BODY>
-</HTML>`;
-        var code112 = "function foo(items) {\n var x = 5; \n return x; \n}";
-        var code121 = '@import url(http://fonts.googleapis.com/css?family=Gabriela); \n' +
- 
-                'h1{\ncolor:red;\nfont-style:italic;\nfont-weight:bold;\nfont-family:sans-serif;\nfont-size:250%;\n}\n\n'+ 
- 
-                'h2{\ntext-align:right;\ncolor:white;\nbackground-color:blue;\n}\n\n' +
- 
-                'p{\ncolor:green;\ntext-align: center;\nfont-family:sans-serif;\n}\n\n' +
- 
-                'p i {\ncolor:blue;\n}'+
- 
-                'p a {\ncolor:red;\nbackground-color:silver;\ntext-decoration:none;\n}\n\n' +
- 
-                'p a:hover{\ntext-decoration:underline;\n}';
- 
-        var file111 = new File('Zadatak 1.html', '/Web tehnologije/Tutorijal 1/Zadatak 1.html', code111, '/Web tehnologije/Tutorijal 1/Zadatak 1.html');
-        var file112 = new File('Zadatak 2.js', '/Web tehnologije/Tutorijal 1/Zadatak 1.js', code112, '/Web tehnologije/Tutorijal 1/Zadatak 2.js');
- 
-        var file121 = new File('Zadatak 1.css',"/Web tehnologije/Tutorijal 2/Zadatak 1.css",code121, '/Web tehnologije/Tutorijal 2/Zadatak 1.css');
- 
-        var f11 = new Folder('Tutorijal 1','/Web tehnologije/Tutorijal 1', [file111, file112], '/Web tehnologije/Tutorijal 1');
- 
-        var f12 = new Folder('Tutorijal 2', '/Web tehnologije/Tutorijal 2', [file121], '/Web tehnologije/Tutorijal 2');
- 
-        var f1 = new Folder('Web tehnologije', '/Web tehnologije', [f11, f12], '/Web tehnologije');
- 
-        var code211 = '//THIS is ineditor example\nfunction Tab(file, id, session_id){\n    this.file = file;\n    this.id = id;\n    this.session_id;\n}\n\n' +
-             
-                'Tab.prototype.getName = function getName(){\n    return this.file.Name;\n}\n';
-         
-        var file211 = new File('index.html','/Moji projekti/Spidercode/index.html', code211, '/Moji projekti/Spidercode/index.html');
- 
-        var f21 = new Folder('Spidercode', '/Moji projekti/Spidercode', [file211], '/Moji projekti/Spidercode');
- 
-        var f2 = new Folder('Moji projekti', '/Moji projekti', [f21], '/Moji projekti');
- 
-        var Projects = [f1, f2];
-  
+       
  
  // DUMMY DATA END 
         $scope.openInEditor = function(file)
@@ -83,24 +170,11 @@
             $scope.openedFile = file; //ovo openedFile ce poslije  biti atribut od span-a od taba 
         }
 
-         var getTree = function(){
-            return ProjectFactory.getTree(); //ovo treba bit u mngr
-        }
-
-        var getFolderContents = function(path){
-            return ProjectFactory.getFolderContents({path: path}); //ovo treba bit u mngr
-        }
-
-        var getFile = function(path){
-            return ProjectFactory.getFile({path: path}); //ovo treba bit u mngr
-        }
-
+       
         var updateFile = function(path, content){
-            return ProjectFactory.updateFile({path: path, content: content}); //ovo treba bit u mngr
+            return $scope.ProjectFactory.updateFile({path: path, content: content}); //ovo treba bit u mngr
         }
         
-        $scope.fileManager.updateFile = updateFile; 
- 
         // ovo je onclick funkcija za sve elemente klase folder, liste koja se moze prosiriti
         //refElement nam je HTML objekat koji predstavlja prosirivu listu koja moze biti prosirena ili ne 
         //refFolder je javascript objekat koji ima u sebi nove foldere i fileove i cije ime i sadrzaj (ako je prosiren) prikazuje refElement
@@ -114,8 +188,10 @@
  
                 if(!refFolder.getIsLoad())
                 {
+                    $scope.ProjectFactory.registerGetFolderContentsObserverCallback(appear);
                     //HTTP GET folderov content(samo imena fileova) na osnovu path-a + appear(refElement, refFolder)
-                    refFolder.SetContent = getFolderContents(refFolder.getPath());
+                    $scope.ProjectFactory.getFolderContents({refFolder: refFolder, refElement: refElement});
+                    refFolder.setIsLoad(true);
 
                 }
                 else
@@ -125,7 +201,7 @@
                     {
  
                         //napravi djecu na osnovu dobavljenih foldera i fajlova - dodaj clanove u html element ul
-                        appear(refElement, refFolder);
+                        appear({refElement: refElement, refFolder: refFolder});
                     }
                     else
                     { // postoje djeca - postoje i js objekti i html objekti - samo ih treba prikazati
@@ -142,8 +218,11 @@
         };
  
         //napravi clanove liste u refElementu - prikazi sadrzaj refFolder-a, na osnovu dobavljenih podataka
-        var appear = function(refElement, refFolder)
+        var appear = function($params)
         {
+            var refElement = $params.refElement;
+            var refFolder = $params.refFolder;
+
             var lista = document.createElement("ul"); //lista koju ce u sebi sadrzavati refElement - to je njegov content
             var folders = refFolder.getFolders();
             for(var i = 0; i < folders.length; i++) //za svaki folder koji sadrzi u sebi pravimo li element koji je tipa prosirive liste
@@ -211,25 +290,45 @@
             refElement.querySelector("ul").style.display = "none";
         }
 
+     $scope.Projects = [];
+      
        
         $scope.onloadfunc = function()
         {
+             $scope.Projects = $scope.ProjectFactory.getProjects();
          
+                if($scope.Projects.length === 0)
+                {
+
+                    $scope.ProjectFactory.registerGetTreeObserverCallback(showProjects); 
+                    $scope.ProjectFactory.getTree($scope.Projects);
+                }
+                else
+                    showProjects();
+        };
+
+        var showProjects = function(){
+
+            //alert('I am at showProjects!');
+
+            $scope.Projects = $scope.ProjectFactory.getProjects();
+
+
             var elements = document.querySelectorAll("#projectTree"); //dobavi osnovni project tree - listu za prikaz projekata
  
             if(elements.length != 0)
             {
-                var list = elements[0];
-                if(Projects.length === 0)
-                    Projects = getTree();
-                for(var i = 0; i < Projects.length; i++) // prikazi dobavljene projekte za user-a kao prosirive liste
-                {
+                   var list = elements[0];
+
+                   for(var i = 0; i < $scope.Projects.length; i++) // prikazi dobavljene projekte za user-a kao prosirive liste
+
+                    {
                         var node = document.createElement("LI");
                         node.setAttribute("class", "folder not-selectable unexpanded");
  
                         var c = document.createElement("span");
                         c.setAttribute("class", "icon");
-                        c.folder = Projects[i];
+                        c.folder = $scope.Projects[i];
                         c.addEventListener( "click", function() {
                         return $scope.list(this.parentNode, this.folder);
                         }, false);
@@ -237,8 +336,8 @@
  
                         var s = document.createElement("span");
                         s.setAttribute("class", "link");
-                        s.innerHTML = Projects[i].getName();
-                        s.folder = Projects[i];
+                        s.innerHTML = $scope.Projects[i].getName();
+                        s.folder = $scope.Projects[i];
                         s.addEventListener( "dblclick", function() {
                         return $scope.list(this.parentNode, this.folder);
                         }, false);
@@ -246,9 +345,10 @@
  
                         list.appendChild(node);
                          
-                }
+                    }
             }
-        }
+            };
+        
          
         //this is temporary solution
         var file_manager_resizer = {
@@ -286,10 +386,9 @@
         window.onresize = f;
         f();
  
-    //menu on the left - end
     }
  
-    HomeCtrl.$inject = ['$scope', 'ServiceProvider'];
+    HomeCtrl.$inject = ['$scope', 'FileManager', '$http'];
     angular.module('app').controller('HomeCtrl', HomeCtrl);
  
 })();

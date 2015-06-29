@@ -4,15 +4,25 @@
 
         var getContent = function(data, content, parentPath){
 			 for(var i = 0; i < data.length; i++){
+	 			var path;
+	 			if(parentPath != '')
+	 			path = parentPath + "/" + data[i].id;
+	 		    else
+	 		    path = data[i].id;
+
 			 	if(data[i].type === "file")
-			 		content.push(new File(data[i].name, parentPath + "\\" + data[i].id , data[i].contents, data[i].id));
+			 		content.push(new File(data[i].name, path, data[i].contents, data[i].id));
 			 	else
 			 		if(data[i].type === "folder"){
 			 			var c = [];
-			 			getContent(data[i].contents, c,  parentPath + "\\" + data[i].id);
+			 			c = getContent(data[i].contents, c,  path);
 
-			 			var folder = new Folder(data[i].name, parentPath + "\\" + data[i].id, c, id);
-			 			folder.setIsLoad(true);
+			 			var folder = new Folder(data[i].name, path, c, data[i].id);
+			 			if(data[i].id.indexOf("task") > -1)
+			 			folder.setIsLoad(false);
+			 		    else
+			 		    	folder.setIsLoad(true);
+			 		  
 			 			content.push(folder);
 			 		}
 
@@ -24,12 +34,22 @@
 
 		 var getTreeContent = function(data, content, parentPath){
 			 for(var i = 0; i < data.length; i++){
+	 			var path;
+	 			if(parentPath != '')
+	 			path = parentPath + "/" + data[i].id;
+	 		    else
+	 		    path = data[i].id;
+
 			 	if(data[i].type === "folder"){
 			 			var c = [];
-			 			getContent(data[i].contents, c,  parentPath + "\\" + data[i].id);
+			 			c = getTreeContent(data[i].contents, c,  path);
 
-			 			var folder = new Folder(data[i].name, parentPath + "\\" + data[i].id, c, id);
+			 			var folder = new Folder(data[i].name, path, c, data[i].id);
+			 			if(data[i].id.indexOf("task") > -1)
 			 			folder.setIsLoad(false);
+			 		    else
+			 		    	folder.setIsLoad(true);
+			 		  
 			 			content.push(folder);
 			 		}
 
@@ -40,11 +60,11 @@
 		}
 		return{
 			getParamsForLogin: function(data){
-				return {login: data.login, pass: data.pass};
+				return 'login='+ data.login +"&pass=" + data.pass;
 			},
 			FetchTree:  function(data){
 					var content = [];
-				content = getContent(data, content, '');
+				content = getTreeContent(data, content, '');
 
 				return content;
 			},

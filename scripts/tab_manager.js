@@ -3,7 +3,7 @@ function TabManager(ace_manager){
 	this.ace_manager = ace_manager;
 
 	this.tabs = [];
-
+	this.current_tab = null;
 	//this.initializeMapper();
 }
  
@@ -37,6 +37,7 @@ TabManager.prototype.showTab = function showTab(tab_id){
 	this.ace_manager.getVirtualRenderer().showTab(tab_id);
 	this.ace_manager.getSessionManager().showSession(tab.session_id);
 	
+	this.current_tab = tab_id;
 }
 
 TabManager.prototype.closeTab = function closeTab(tab_id){
@@ -49,6 +50,22 @@ TabManager.prototype.closeTab = function closeTab(tab_id){
 
 	this.ace_manager.getVirtualRenderer().removeTab(tab_id);
 	this.ace_manager.getSessionManager().deleteSession(tab.session_id);
+
+	//Otvaranje nekog file-a
+	if(this.current_tab === tab_id){
+		var next_tab_id = null;
+		for(var i = 0; i < this.tabs.length; i++){
+			if(this.tabs[i]){
+				next_tab_id = this.tabs[i].id;
+				break;
+			}
+		}
+			
+		if(next_tab_id)
+			this.showTab(next_tab_id);
+		else
+			this.ace_manager.getSessionManager().showBlankSession();
+	}
 }
 
 
@@ -77,10 +94,15 @@ TabManager.prototype.saveTab = function saveTab(tab_id){
 
 	//alert("tab");
 	var newContent = this.ace_manager.getSessionManager().getContent(tab.getSessionId());
-	this.ace_manager.getFileManager().updateFile(tab.getPath(), newContent);
+	this.ace_manager.getFileManager().getProjectFactory().updateFile({path: tab.getPath(), content: newContent});
 }
 
-
+TabManager.prototype.getCurrentTab = function(tab_id){
+	if(this.current_tab)
+		return this.$getTabById(this.current_tab);
+	else
+		return null;
+}
 
 //Mapper
 TabManager.prototype.mapper = new Map();
@@ -106,6 +128,7 @@ TabManager.prototype.mapper = new Map();
 	mapper.set(".mysql", "mysql");
 	mapper.set(".sql", "sql");
 	mapper.set(".txt", "text");
+	mapper.set(".php", "php")
 }())
 
 //END - TabManager

@@ -5,4 +5,67 @@
     </div>
 
     <div id="editor" class="editor"></div>
+
+    <div id="test-panel">
+    	<div id="test-x-btn">&#10006;</div>
+
+    	<header>
+    		<h1>Tests Manager</h1>
+    		<h2>Task name: <em>{{task.name}}</em><h2>
+    	</header>
+    	
+    	<hr class="h-div"/>
+		<ul class="action-list">
+			<li class="not-selectable" ng-click="taskTab = 1">Mange task</li>
+			<li class="not-selectable" ng-click="taskTab = 2">Manage tests</li>
+			<li class="not-selectable" ng-click="taskTab = 3">Run task</li>
+		</ul>
+		<div class="panel">
+			<div ng-show="taskTab === 1">
+				<span>Modify name:  </span><input type="text" ng-model="task.name"/>
+	    	</div>
+	    	<div ng-show="taskTab === 2">
+				<div id="tests-list">
+					<div class="heading">
+						<h1>Tests</h1>
+					</div>
+					
+					<ul id="tests-list-list">
+						<li>Test 1</li>
+						<li>Test 2</li>
+						<li>Test 3</li>
+						<li>Test 4</li>
+					</ul>
+
+
+				</div>
+				
+				<div class="v-div"></div>
+				<div id="tests-show">
+					<div class="input-inline-group"><p>Id</p><p id="test-id"></p></div>
+					<div class="input-inline-group"><label for="req-sim">Require simbols</label><input id="req-sim" name="req-sim" type="text"></div>
+					<div class="input-inline-group"><label for="exp-sim">Expecte result</label><textarea id="exp-sim" name="exp-sim" type="text"></textarea></div>
+					<div class="input-inline-group"><p>Code</p><div id="codeEditor" class="editor"></div></div>
+					<div class="input-inline-group"><p>Global above main</p><div id="gamEditor" class="editor"></div></div>
+					<div class="input-inline-group"><p>Global top</p><div id="gtEditor" class="editor"></div></div>
+					<div class="input-inline-group"><label for="excCB">Expect exception</label><input id="excCB" name="excCB" type="checkbox" ></div>
+					<div class="input-inline-group"><label for="iwsCB">Ignore whitespaces</label><input id="iwsCB" name="iwsCB" type="checkbox" ></div>
+					<div class="input-inline-group"><label for="regCB">Regex</label><input id="regCB" name="regCB" type="checkbox" ></div>
+					<div class="input-inline-group"><label for="subCB">Substring</label><input id="subCB" name="subCB" type="checkbox" ></div>
+					<div class="input-inline-group">
+						<div id="tests-add" class="btn btn-blue">Add new test</div>
+						<div id="tests-save" class="btn btn-blue">Save changes</div>
+						<div id="tests-rm" class="btn btn-blue">Remove test</div>
+					</div>
+					
+					
+				</div>
+	    	</div>
+	    	<div ng-show="taskTab === 3">
+				<div id="tests-start" class="btn btn-blue">Start test</div>
+	    	</div>
+		</div>
+		
+    </div>
+    <!--<div id="test-btn" class="btn btn-blue">Tests</div>-->
 </section>
