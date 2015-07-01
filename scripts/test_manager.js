@@ -3,7 +3,7 @@ function Task(){
 }
 
 Task.prototype.reset = function(){
-	this.id = null;
+	this.id = 1;
 	this.name = "";
 	this.language= "C++";
 	this.required_compiler = "g++";
@@ -13,6 +13,7 @@ Task.prototype.reset = function(){
 	this.compiler_options_debug = "-ggdb -lm -pass-exit-codes";
 	this.compile = "true";
     this.run = "false";
+    this.running_params = { "timeout": 10, "vmem": 1000000, "stdin": "" };
     this.test = "true";
     this.debug = "true";
 	this.profile = "true";
@@ -100,7 +101,7 @@ Task.prototype.saveTest = function(test,test_id,req_sim, exp_sim, code, gam, gt,
 
 Task.prototype.resetFields = function(test_id,req_sim, exp_sim, code, gam, gt, exc, iws, reg, sub){
 	
-	document.getElementById(test_id).innerHTML = "";
+	document.getElementById(test_id).innerHTML = "<em>odaberite test lijevo</em>";
 	document.getElementById(req_sim).value = "";
 	document.getElementById(exp_sim).value = "";
 	document.getElementById(code).env.editor.setValue("", -1);
@@ -123,7 +124,7 @@ function Test(){
 	this.global_above_main = "";
 	this.global_top = "";
 	this.running_params = { "timeout": 10, "vmem": 1000000, "stdin": "" };
-	this.expected = [ "2.00\\n2.10\\n2.20\\n" ]; 
+	this.expected = [""]; 
 	this.expected_exception = false;
 	this.expected_crash = false;
 	this.ignore_whitespace = false;

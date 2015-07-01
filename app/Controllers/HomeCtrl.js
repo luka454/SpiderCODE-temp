@@ -4,7 +4,7 @@
    var HomeCtrl = function($scope, fileManager, $http) {
     //services - begin
         $scope.ProjectFactory = fileManager.getProjectFactory();
-
+        $scope.ProjectFactory.resetObserverCallbacks();
        // alert(typeof(JSZip)); 
         //alert(JSZip);
         var eDom = document.getElementById("editor");
@@ -31,7 +31,7 @@
         var title = document.createElement("div");
         title.classList.add("acem-tab-title");
         //title.classList.add("not-selectable");
-        var t_text = document.createTextNode("Tests");
+        var t_text = document.createTextNode("Build & Test");
         title.appendChild(t_text);
 
         testBtn.appendChild(title);
@@ -52,8 +52,7 @@
 
         }, false);
         $scope.task = new Task();
-        $scope.task.addTest(new Test());
-        $scope.task.addTest(new Test());
+        
         $scope.taskTab = 1;
         var codeEditor = ace.edit("codeEditor");
         codeEditor.setTheme("ace/theme/tomorrow_night");
@@ -75,6 +74,11 @@
             var list = document.getElementById("tests-list-list");
             list.innerHTML ="";
             var tests = $scope.task.getTests();
+            if(tests.length == 0){
+                var el = document.createElement("li");
+                el.innerHTML = "<em>Nema testova</em>";
+                list.appendChild(el);
+            }
             for(var i = 0; i < tests.length; i++){
                 if(tests[i]){
                     var el =document.createElement("li");
@@ -95,21 +99,29 @@
 
         var startTestBtn = document.getElementById("tests-start");
         startTestBtn.addEventListener('click', function(){
+            $scope.instance = null;
+             
+            if($scope.task.run === true){
+                $scope.task.run = "true";
+            } else if ($scope.task.run === false){
+                $scope.task.run = "false";
+            }
             var json = JSON.stringify($scope.task);
             //alert(json);
 
             var zip = new JSZip();
-            
+            var task = new JSZip();
             //alert($scope.manager.getEditor().getSession().getValue());
 
             zip.file("zad.cpp",$scope.manager.getEditor().getSession().getValue());
             var a = zip.generate({type:"blob"}); 
+            task.file("task.json", json);
 
             var fd = new FormData();
             fd.append('program_data', a);
-            //var taskData = task.file("task.json").asUint8Array();
+            var taskData = task.file("task.json").asUint8Array();
 
-            var f = new File(json, "task.json", {type: "text/plain"});
+            var f = new Blob([json], {type: "text/json"});
             fd.append('task_data', f);
             $http({
                 url: "http://php-vljubovic.rhcloud.com/bs/submit.php",
@@ -120,7 +132,9 @@
                 withCredentials : false
             }).
             success(function(data, status, headers, config) {
+                $scope.instance = data.instance;
                 alert("Uspjelo!!!: "+ data);
+
                 alert(data);
             }).
             error(function(data, status, headers, config) {
@@ -156,10 +170,87 @@
             curTest = id;
             refreshTestList();
         }, false)
+
+        document.getElementById('tests-check').addEventListener('click', function(){
+            if(!$scope.instance){
+                alert("Please first run build & test");
+                return;
+            }
+            
+            $http({
+                url:"http://php-vljubovic.rhcloud.com/bs/check_status.php?instance="+$scope.instance,
+                method: "GET", 
+                transformRequest: angular.identity,
+                headers: {'Content-Type': undefined},
+                withCredentials : false
+
+            }).success(function(data, status, headers, config) {
+                
+                var div = document.getElementById("buildResultDiv");
+                showBuildResults(data);
+                alert("Check build & test results");    
+                
+            }).
+            error(function(data, status, headers, config) {
+                alert("There is error in build and test: " +  status);
+               
+            });
+
+            
+        }, false);
         // dummy DATA - BEGIN
 
-       
- 
+       var showBuildResults = function(data){
+            var buildStatus = document.getElementById("tests-build-status");
+            buildStatus.innerHTML = data.status.message;
+
+            var compileStatus = document.getElementById("tests-compile-result-status");
+            compileStatus.innerHTML = data.status.compile_result.status == 1 ? "Uspješno" : "Nije uspjelo";
+
+            var compileOutput = document.getElementById("tests-compile-result-output");
+            compileOutput.value = data.status.compile_result.output;
+
+            showErrorsInEditor(data.status.compile_result.output);
+
+            var run = document.getElementById("tests-run");
+            if(typeof data.status.run_result.status != "undefined"){
+                run.style.display = "block";
+
+                var runStatus = document.getElementById("tests-run-result-status");
+                runStatus.innerHTML = data.status.run_result.status == 1 ? "Uspješno" : "Nije uspjelo";
+
+                var runOutput = document.getElementById("tests-run-result-output");
+                runOutput.value = data.status.run_result.output;
+            } else {
+                run.style.display = "none";
+            }
+
+            var tests = document.getElementById("tests-tests");
+            tests.innerHTML = "";
+
+       }
+
+        var showErrorsInEditor = function(output){
+            var lines = output.split("\n");
+            var reg = /.*:(\d+): (\w+):(.*)/;
+            var annotations = [];
+
+            for(var i = 0; i < lines.length; i++){
+                var m = reg.exec(lines[i]);
+                
+                if(!m)
+                    continue;
+
+                annotations.push({
+                    row: m[1]-1,
+                    type: m[2],
+                    text: m[3],
+                })
+            }
+
+            var session = $scope.manager.editor.getSession();
+            session.setAnnotations(annotations);
+        }
  // DUMMY DATA END 
         $scope.openInEditor = function(file)
         {
